@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MLB 球隊位置互動儀表板</title>
+    <!-- 新增: 引入 Google Fonts (Roboto) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            /* 更新: 使用 Roboto 作為全局字體 */
+            font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            overflow: hidden;
+        }
+        .dashboard-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            padding: 15px;
+            box-sizing: border-box;
+        }
+        h1 {
+            color: #1a237e;
+            text-align: center;
+            margin: 0 0 15px 0;
+            flex-shrink: 0;
+            font-weight: 700;
+        }
+        .main-content {
+            display: flex;
+            flex-grow: 1;
+            gap: 15px;
+            overflow: hidden;
+        }
+        .legend-sidebar {
+            flex: 1;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            padding: 15px 20px;
+            overflow-y: auto;
+        }
+        #map-container {
+            flex: 2.5;
+            display: flex;
+        }
+        #map {
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .league-column h3 {
+            color: #0d47a1;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 8px;
+            margin-top: 0;
+            position: sticky;
+            top: -15px;
+            background-color: #ffffff;
+            z-index: 10;
+        }
+        .division-block h4 {
+            color: #333;
+            margin-top: 15px;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            padding: 7px 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .legend-item:hover {
+            background-color: #e3f2fd;
+        }
+        .legend-item img {
+            width: 28px; /* 微調圖示大小 */
+            height: 28px;
+            margin-right: 12px;
+            object-fit: contain;
+            flex-shrink: 0;
+        }
+        .team-name-container {
+            line-height: 1.45;
+            pointer-events: none;
+        }
+        .team-name-container .name-zh {
+            font-size: 14px;
+            font-weight: 700; /* 使用 Bold 字重 */
+            color: #000;
+        }
+        /* -- 更新: 優化英文和縮寫的樣式 -- */
+        .team-name-container .name-en-abbr {
+            font-size: 13px;  /* 放大字體 */
+            color: #555;      /* 使用清晰的深灰色 */
+        }
+        .leaflet-control-reset {
+            background-color: white;
+            width: 34px;
+            height: 34px;
+            border-radius: 4px;
+            border: 2px solid rgba(0,0,0,0.2);
+            background-clip: padding-box;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .leaflet-control-reset:hover {
+            background-color: #f4f4f4;
+        }
+        .leaflet-control-reset svg {
+            width: 20px;
+            height: 20px;
+            fill: #333;
+        }
+        .leaflet-tooltip.custom-tooltip {
+            background-color: rgba(255, 255, 255, 0.95);
+            border: 1px solid #999;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            padding: 10px;
+            line-height: 1.5;
+        }
+        .tooltip-location {
+            font-size: 15px;
+            font-weight: 700;
+            color: #000;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 4px;
+            margin-bottom: 4px;
+        }
+        .tooltip-details { 
+            color: #333; 
+            font-size: 14px;
+        }
+        .tooltip-details .name-en { 
+            color: #555; 
+            font-size: 13px; 
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-container">
+        <h1>MLB 球隊位置互動儀表板</h1>
+        <div class="main-content">
+            <div class="legend-sidebar">
+                <div class="league-column">
+                    <h3>美國聯盟 (American League)</h3>
+                    <div id="al-east-legend" class="division-block"><h4>東區</h4></div>
+                    <div id="al-central-legend" class="division-block"><h4>中區</h4></div>
+                    <div id="al-west-legend" class="division-block"><h4>西區</h4></div>
+                </div>
+            </div>
+            <div id="map-container">
+                <div id="map"></div>
+            </div>
+            <div class="legend-sidebar">
+                <div class="league-column">
+                    <h3>國家聯盟 (National League)</h3>
+                    <div id="nl-east-legend" class="division-block"><h4>東區</h4></div>
+                    <div id="nl-central-legend" class="division-block"><h4>中區</h4></div>
+                    <div id="nl-west-legend" class="division-block"><h4>西區</h4></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const initialCenter = [39.8283, -98.5795];
+        const initialZoom = 4;
+
+        const map = L.map('map').setView(initialCenter, initialZoom);
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        }).addTo(map);
+
+        const teams = [
+            // AL East
+            { name: "巴爾的摩金鶯", name_en: "Baltimore Orioles", abbr: "BAL", city: "巴爾的摩", state: "MD", lat: 39.2839, lon: -76.6217, logo: "https://a.espncdn.com/i/teamlogos/mlb/500/bal.png", league: "AL", division: "East" },
+            { name: "波士頓紅襪", name_en: "Boston Red Sox", abbr: "BOS", city: "波士頓", state: "MA", lat: 42.3467, lon: -71.0972, logo: "https://a.espncdn.com/i/teamlogos/mlb/500/bos.png", league: "AL", division: "East" },
+            { name: "紐約洋基", name_en: "New York Yankees", abbr: "NYY", city: "紐約", state: "NY", lat: 40.8296, lon: -73.9262, logo: "https://a.espncdn.com/i/teamlogos/mlb/500/nyy.png", league: "AL", division: "East" },
+            { name: "坦帕灣光芒", name_en: "Tampa Bay Rays", abbr: "TB", city: "聖彼得堡", state: "FL", lat: 27.7682, lon: -82.6534, logo: "https://a.espncdn.com/i/teamlogos/mlb/500/tb.png", league: "AL", division: "East" },
+            { name: "多倫多藍鳥", name_en: "Toronto Blue Jays", abbr: "TOR", city: "多倫多", state: "ON", lat: 43.6414, lon: -79.3894, logo: "https://a.espncdn.com/i/teamlogos/mlb/500/tor.png", league: "AL", division: "East" },
+            // AL Central
+            { name: "芝加哥白襪", name_en: "Chicago White Sox", abbr: "CWS", city: "芝加哥", state: "IL", lat: 41.8300, lon: -87.6337, logo: "https://a.espncdn.com/i/teamlogos/mlb/500/chw.png", league: "AL", division: "Central" },
+            { name: "克里夫蘭守護者", name_en: "Cleveland Guardians", abbr: "CLE", city: "克里夫蘭", state: "OH", lat: 41.4962, lon: -81.6852, logo: "https://a.espncdn.com/i/teamlogos/mlb/500/cle.png", league: "AL", division: "Central" },
+            { name: "底特律老虎", name_en: "Detroit Tigers", abbr: "DET", city: "底特律", state: "MI", lat: 42.3390, lon: -83.0485, logo: "https://a.espncdn.com/i/teamlogos/mlb/500/det.png", league: "AL", division: "Central" },
+            { name: "堪薩斯市皇家", name_en: "Kansas City Royals", abbr: "KC", city: "堪薩斯市", state: "MO", lat: 39.0517, lon: -94.4803, logo: "https://a.espncdn.com/i/teamlogos/mlb/500/kc.png", league: "AL", division: "Central" },
+            { name: "明尼蘇達雙城", name_en: "Minnesota Twins", abbr: "MIN", city: "明尼亞波利斯", state: "MN", lat: 44.9817, lon: -93.2783, logo: "https://a.espncdn.com/i/teamlogos/mlb/500/min.png", league: "AL", division: "Central" },
+            // AL West
+            { name: "休士頓太空人", name_en: "Houston Astros", abbr: "HOU", city: "休士頓", state: "TX", lat: 29.7572, lon: -95.3555, logo: "https://a.espncdn.com/i/teamlogos/mlb/500/hou.png", league: "AL", division: "West" },
+            { name: "洛杉磯天使", name_en: "Los Angeles Angels", abbr: "LAA", city: "安那罕", state: "CA", lat: 33.8003, lon: -117.8828, logo: "https://a.espncdn.com/i/teamlogos/mlb/500/laa.png", league: "AL", division: "West" },
+            { name: "奧克蘭運動家", name_en: "Oakland Athletics", abbr: "OAK", city: "奧克蘭", state: "CA", lat: 37.7516, lon: -122.2005, logo: "https://a.espncdn.com/i/teamlogos/mlb/500/oak.png", league: "AL", division: "West" },
+            { name: "西雅圖水手", name_en: "Seattle Mariners", abbr: "SEA", city: "西雅圖", state: "WA", lat: 47.5914, lon: -122.3325, logo: "https://a.espncdn.com/i/teamlogos/mlb/500/sea.png", league: "AL", division: "West" },
+            { name: "德州遊騎兵", name_en: "Texas Rangers", abbr: "TEX", city: "阿靈頓", state: "TX", lat: 32.7511, lon: -97.0828, logo: "https://a.espncdn.com/i/teamlogos/mlb/500/tex.png", league: "AL", division: "West" },
+            // NL East
+            { name: "亞特蘭大勇士", name_en: "Atlanta Braves", abbr: "ATL", city: "亞特蘭大", state: "GA", lat: 33.8907, lon: -84.4678, logo: "https://a.espncdn.com/i/teamlogos/mlb/500/atl.png", league: "NL", division: "East" },
+            { name: "邁阿密馬林魚", name_en: "Miami Marlins", abbr: "MIA", city: "邁阿密", state: "FL", lat: 25.7781, lon: -80.2196, logo: "https://a.espncdn.com/i/teamlogos/mlb/500/mia.png", league: "NL", division: "East" },
+            { name: "紐約大都會", name_en: "New York Mets", abbr: "NYM", city: "紐約", state: "NY", lat: 40.7569, lon: -73.8458, logo: "https://a.espncdn.com/i/teamlogos/mlb/500/nym.png", league: "NL", division: "East" },
+            { name: "費城費城人", name_en: "Philadelphia Phillies", abbr: "PHI", city: "費城", state: "PA", lat: 39.9061, lon: -75.1665, logo: "https://a.espncdn.com/i/teamlogos/mlb/500/phi.png", league: "NL", division: "East" },
+            { name: "華盛頓國民", name_en: "Washington Nationals", abbr: "WSH", city: "華盛頓特區", state: "DC", lat: 38.8730, lon: -77.0074, logo: "https://a.espncdn.com/i/teamlogos/mlb/500/wsh.png", league: "NL", division: "East" },
+            // NL Central
+            { name: "芝加哥小熊", name_en: "Chicago Cubs", abbr: "CHC", city: "芝加哥", state: "IL", lat: 41.9484, lon: -87.6553, logo: "https://a.espncdn.com/i/teamlogos/mlb/500/chc.png", league: "NL", division: "Central" },
+            { name: "辛辛那提紅人", name_en: "Cincinnati Reds", abbr: "CIN", city: "辛辛那提", state: "OH", lat: 39.0975, lon: -84.5067, logo: "https://a.espncdn.com/i/teamlogos/mlb/500/cin.png", league: "NL", division: "Central" },
+            { name: "密爾瓦基釀酒人", name_en: "Milwaukee Brewers", abbr: "MIL", city: "密爾瓦基", state: "WI", lat: 43.0280, lon: -87.9712, logo: "https://a.espncdn.com/i/teamlogos/mlb/500/mil.png", league: "NL", division: "Central" },
+            { name: "匹茲堡海盜", name_en: "Pittsburgh Pirates", abbr: "PIT", city: "匹茲堡", state: "PA", lat: 40.4469, lon: -80.0058, logo: "https://a.espncdn.com/i/teamlogos/mlb/500/pit.png", league: "NL", division: "Central" },
+            { name: "聖路易紅雀", name_en: "St. Louis Cardinals", abbr: "STL", city: "聖路易", state: "MO", lat: 38.6226, lon: -90.1928, logo: "https://a.espncdn.com/i/teamlogos/mlb/500/stl.png", league: "NL", division: "Central" },
+            // NL West
+            { name: "亞利桑那響尾蛇", name_en: "Arizona Diamondbacks", abbr: "ARI", city: "鳳凰城", state: "AZ", lat: 33.4455, lon: -112.0667, logo: "https://a.espncdn.com/i/teamlogos/mlb/500/ari.png", league: "NL", division: "West" },
+            { name: "科羅拉多落磯", name_en: "Colorado Rockies", abbr: "COL", city: "丹佛", state: "CO", lat: 39.7562, lon: -104.9942, logo: "https://a.espncdn.com/i/teamlogos/mlb/500/col.png", league: "NL", division: "West" },
+            { name: "洛杉磯道奇", name_en: "Los Angeles Dodgers", abbr: "LAD", city: "洛杉磯", state: "CA", lat: 34.0738, lon: -118.2400, logo: "https://a.espncdn.com/i/teamlogos/mlb/500/lad.png", league: "NL", division: "West" },
+            { name: "聖地牙哥教士", name_en: "San Diego Padres", abbr: "SD", city: "聖地牙哥", state: "CA", lat: 32.7077, lon: -117.1570, logo: "https://a.espncdn.com/i/teamlogos/mlb/500/sd.png", league: "NL", division: "West" },
+            { name: "舊金山巨人", name_en: "San Francisco Giants", abbr: "SF", city: "舊金山", state: "CA", lat: 37.7786, lon: -122.3893, logo: "https://a.espncdn.com/i/teamlogos/mlb/500/sf.png", league: "NL", division: "West" }
+        ];
+
+        const markers = {};
+        let activeMarker = null;
+
+        L.Control.ResetView = L.Control.extend({
+            onAdd: function(map) {
+                const btn = L.DomUtil.create('div', 'leaflet-control-reset leaflet-bar');
+                btn.title = '恢復預設視圖';
+                btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/><path d="M0 0h24v24H0z" fill="none"/></svg>';
+                L.DomEvent.on(btn, 'click', function (e) {
+                    L.DomEvent.stop(e);
+                    map.flyTo(initialCenter, initialZoom);
+                    if (activeMarker) {
+                        activeMarker.closeTooltip();
+                        activeMarker = null;
+                    }
+                });
+                return btn;
+            },
+            onRemove: function(map) { }
+        });
+        L.control.resetView = (opts) => new L.Control.ResetView(opts);
+        L.control.resetView({ position: 'topleft' }).addTo(map);
+
+        teams.forEach(team => {
+            const teamIcon = L.icon({
+                iconUrl: team.logo,
+                iconSize: [40, 40],
+                iconAnchor: [20, 20],
+                popupAnchor: [0, -20]
+            });
+            const marker = L.marker([team.lat, team.lon], { icon: teamIcon }).addTo(map);
+            const tooltipContent = `
+                <div class="tooltip-location">${team.city}, ${team.state}</div>
+                <div class="tooltip-details">
+                    ${team.name} (${team.abbr})<br>
+                    <span class="name-en">${team.name_en}</span>
+                </div>
+            `;
+            marker.bindTooltip(tooltipContent, {
+                permanent: false,
+                direction: 'top',
+                offset: [0, -20],
+                className: 'custom-tooltip'
+            });
+            markers[team.abbr] = marker;
+
+            const targetDivId = `${team.league.toLowerCase()}-${team.division.toLowerCase()}-legend`;
+            const legendContainer = document.getElementById(targetDivId);
+            const legendItem = document.createElement('div');
+            legendItem.className = 'legend-item';
+            legendItem.dataset.teamAbbr = team.abbr;
+            legendItem.innerHTML = `
+                <img src="${team.logo}" alt="${team.name}">
+                <div class="team-name-container">
+                    <div class="name-zh">${team.name}</div>
+                    <div class="name-en-abbr">${team.name_en} (${team.abbr})</div>
+                </div>
+            `;
+            
+            legendItem.addEventListener('click', function() {
+                const teamAbbr = this.dataset.teamAbbr;
+                const targetMarker = markers[teamAbbr];
+                if (targetMarker) {
+                    if (activeMarker && activeMarker !== targetMarker) {
+                        activeMarker.closeTooltip();
+                    }
+                    map.flyTo(targetMarker.getLatLng(), 8);
+                    map.once('moveend', () => {
+                        targetMarker.openTooltip();
+                        activeMarker = targetMarker;
+                    });
+                }
+            });
+
+            if (legendContainer) {
+                legendContainer.appendChild(legendItem);
+            }
+        });
+    </script>
+
+</body>
+</html>
