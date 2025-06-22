@@ -11,6 +11,9 @@
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <!-- Sportradar Widget Loader -->
+    <script type="application/javascript" src="https://widgets.media.sportradar.com/uscommon/widgetloader" data-sr-language="en_us" async></script>
     <style>
         html, body {
             height: 100%;
@@ -147,9 +150,24 @@
             color: #333; 
             font-size: 14px;
         }
-        .tooltip-details .name-en { 
-            color: #555; 
-            font-size: 13px; 
+        .tooltip-details .name-en {
+            color: #555;
+            font-size: 13px;
+        }
+
+        /* Sportradar Score Ticker Styles */
+        .score-ticker-container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+            padding: 10px;
+            flex-shrink: 0;
+        }
+
+        .sr-widget {
+            width: 100%;
+            min-height: 60px;
         }
     </style>
 </head>
@@ -157,6 +175,12 @@
 
     <div class="dashboard-container">
         <h1>MLB 球隊位置互動儀表板</h1>
+
+        <!-- Sportradar Score Ticker -->
+        <div class="score-ticker-container">
+            <div class="sr-widget" data-sr-widget="us.common.scoreTicker" data-sr-sport="mlb"></div>
+        </div>
+
         <div class="main-content">
             <div class="legend-sidebar">
                 <div class="league-column">
