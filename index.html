@@ -169,6 +169,24 @@
             width: 100%;
             min-height: 60px;
         }
+
+        /* Hide Sportradar widget when not on localhost */
+        .score-ticker-container.hidden {
+            display: none;
+        }
+
+        /* Fallback message for non-localhost environments */
+        .ticker-fallback {
+            display: none;
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 20px;
+        }
+
+        .ticker-fallback.show {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -177,8 +195,13 @@
         <h1>MLB 球隊位置互動儀表板</h1>
 
         <!-- Sportradar Score Ticker -->
-        <div class="score-ticker-container">
+        <div class="score-ticker-container" id="scoreTickerContainer">
             <div class="sr-widget" data-sr-widget="us.common.scoreTicker" data-sr-sport="mlb"></div>
+        </div>
+
+        <!-- Fallback message for non-localhost -->
+        <div class="score-ticker-container ticker-fallback" id="tickerFallback">
+            <p>比分資訊僅在本地開發環境中顯示</p>
         </div>
 
         <div class="main-content">
@@ -205,6 +228,30 @@
     </div>
 
     <script>
+        // Check if running on localhost and manage Sportradar widget visibility
+        function checkLocalhost() {
+            const isLocalhost = window.location.hostname === 'localhost' ||
+                               window.location.hostname === '127.0.0.1' ||
+                               window.location.hostname === '' ||
+                               window.location.protocol === 'file:';
+
+            const tickerContainer = document.getElementById('scoreTickerContainer');
+            const fallbackContainer = document.getElementById('tickerFallback');
+
+            if (isLocalhost) {
+                // Show Sportradar widget on localhost
+                tickerContainer.classList.remove('hidden');
+                fallbackContainer.classList.remove('show');
+            } else {
+                // Hide Sportradar widget and show fallback on deployed sites
+                tickerContainer.classList.add('hidden');
+                fallbackContainer.classList.add('show');
+            }
+        }
+
+        // Run the check when page loads
+        document.addEventListener('DOMContentLoaded', checkLocalhost);
+
         const initialCenter = [39.8283, -98.5795];
         const initialZoom = 4;
 

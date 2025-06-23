@@ -102,20 +102,14 @@
 1.  **語言：** 所有使用者可見的文字，包括標題、圖例和提示資訊，都需使用**繁體中文**。
 2.  **視覺風格：** 整體風格需簡潔、專業。請引入與 MLB 官網風格相似的清晰、現代字體（例如 Google Fonts 的 Roboto）。圖例中的英文與縮寫文字需清晰、易讀，字體大小適中且顏色要夠深，以確保閱讀體驗。
 
----
-
-## Sportradar Score Ticker 實作
-
-### 參考來源
-- [Score Ticker](https://widgets.media.sportradar.com/usdemo#eyJzcG9ydCI6Im1sYiIsImNhdGVnb3J5IjoibGVhZ3VlIiwic2Vhc29uSWQiOjEyNTczNSwibWF0Y2hJZCI6NTUzMDkxODMsInRlYW1VaWQiOjU5MzAsInBsYXllcklkIjo4NjUxMDYsInBsYXllcklkcyI6WzE0ODczMjAsODQzMzMzLDg2NDIwOCwyMTM5NjA4LDE3NDUyMDUsODQzODY3LDg0OTE2MCwxNjkyNTYzLDEwNzk5MzgsMTM1ODQ3NCwxNTM5NzY5LDg0ODU2NywyMTQ2NTU0LDg2NTEwNiwxNjk0MzEzLDI1NTAyNzMsMTA3ODEyMiwxNTM1MjM1LDExMzQxNzksODQyNjk1LDE1MzkxODksMTc0OTk1Myw4NDE3NTcsMTM5OTU5MywyMzI0MzUxLDEwOTgxMjBdfQ==)
-- [Widgets.us.common.ScoreTicker](https://widgets.media.sportradar.com/usdocs/Widgets.us.common.ScoreTicker.html)
-
 
 ## Sportradar Score Ticker 
 
 ### 參考來源
 
+
 - [Score Ticker](https://widgets.media.sportradar.com/usdemo#eyJzcG9ydCI6Im1sYiIsImNhdGVnb3J5IjoibGVhZ3VlIiwic2Vhc29uSWQiOjEyNTczNSwibWF0Y2hJZCI6NTUzMDkxODMsInRlYW1VaWQiOjU5MzAsInBsYXllcklkIjo4NjUxMDYsInBsYXllcklkcyI6WzE0ODczMjAsODQzMzMzLDg2NDIwOCwyMTM5NjA4LDE3NDUyMDUsODQzODY3LDg0OTE2MCwxNjkyNTYzLDEwNzk5MzgsMTM1ODQ3NCwxNTM5NzY5LDg0ODU2NywyMTQ2NTU0LDg2NTEwNiwxNjk0MzEzLDI1NTAyNzMsMTA3ODEyMiwxNTM1MjM1LDExMzQxNzksODQyNjk1LDE1MzkxODksMTc0OTk1Myw4NDE3NTcsMTM5OTU5MywyMzI0MzUxLDEwOTgxMjBdfQ==)
+- [Widgets Introduction](https://developer.sportradar.com/widgets/docs/getting-started)  
 - [Widgets.us.common.ScoreTicker](https://widgets.media.sportradar.com/usdocs/Widgets.us.common.ScoreTicker.html)
 
 ### 實作方法
