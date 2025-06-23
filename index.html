@@ -235,8 +235,10 @@
             if (isLocalhost) {
                 // Show Sportradar widget on localhost
                 tickerContainer.classList.remove('hidden');
-                fallbackContainer.classList.remove('show');
-            } 
+            } else {
+                // Hide Sportradar widget and show fallback on deployed sites
+                tickerContainer.classList.add('hidden');
+            }
         }
 
         // Run the check when page loads
